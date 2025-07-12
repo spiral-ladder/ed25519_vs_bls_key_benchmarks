@@ -1,10 +1,10 @@
 use ed25519_dalek::{Keypair, Signer};
-use rand::RngCore;
-use rand::thread_rng;
 use rand::prelude::ThreadRng;
+use rand::thread_rng;
+use rand::RngCore;
 use sha2::{Digest, Sha512};
-use tiny_keccak::{Hasher, Sha3};
 use time::precise_time_ns;
+use tiny_keccak::{Hasher, Sha3};
 
 use blst::min_sig::SecretKey as BlstSecretKey;
 use threshold_crypto::SecretKey as TcSecretKey;
@@ -19,22 +19,46 @@ struct Result {
 fn main() {
     let mut results = vec![];
     // do tests and get results
-    results.push(sign_bls_threshold_crypto("BLS TC Sign 32B (µs)".to_string(), 32));
-    results.push(sign_bls_threshold_crypto("BLS TC Sign 1MiB (µs)".to_string(), 1024*1024));
+    results.push(sign_bls_threshold_crypto(
+        "BLS TC Sign 32B (µs)".to_string(),
+        32,
+    ));
+    results.push(sign_bls_threshold_crypto(
+        "BLS TC Sign 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
     results.push(sign_bls_blst("BLS BLST Sign 32B (µs)".to_string(), 32));
-    results.push(sign_bls_blst("BLS BLST Sign 1MiB (µs)".to_string(), 1024*1024));
+    results.push(sign_bls_blst(
+        "BLS BLST Sign 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
     results.push(sign_ed25519("ED25519 Sign 32B (µs)".to_string(), 32));
-    results.push(sign_ed25519("ED25519 Sign 1MiB (µs)".to_string(), 1024*1024));
-    results.push(verify_bls_threshold_crypto("BLS TC Verify 32B (µs)".to_string(), 32));
-    results.push(verify_bls_threshold_crypto("BLS TC Verify 1MiB (µs)".to_string(), 1024*1024));
+    results.push(sign_ed25519(
+        "ED25519 Sign 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
+    results.push(verify_bls_threshold_crypto(
+        "BLS TC Verify 32B (µs)".to_string(),
+        32,
+    ));
+    results.push(verify_bls_threshold_crypto(
+        "BLS TC Verify 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
     results.push(verify_bls_blst("BLS BLST Verify 32B (µs)".to_string(), 32));
-    results.push(verify_bls_blst("BLS BLST Verify 1MiB (µs)".to_string(), 1024*1024));
+    results.push(verify_bls_blst(
+        "BLS BLST Verify 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
     results.push(verify_ed25519("ED25519 Verify 32B (µs)".to_string(), 32));
-    results.push(verify_ed25519("ED25519 Verify 1MiB (µs)".to_string(), 1024*1024));
+    results.push(verify_ed25519(
+        "ED25519 Verify 1MiB (µs)".to_string(),
+        1024 * 1024,
+    ));
     results.push(sha2_512("SHA2-512 32B (µs)".to_string(), 32));
-    results.push(sha2_512("SHA2-512 1MiB (µs)".to_string(), 1024*1024));
+    results.push(sha2_512("SHA2-512 1MiB (µs)".to_string(), 1024 * 1024));
     results.push(sha3_256("SHA3-256 32B (µs)".to_string(), 32));
-    results.push(sha3_256("SHA3-256 1MiB (µs)".to_string(), 1024*1024));
+    results.push(sha3_256("SHA3-256 1MiB (µs)".to_string(), 1024 * 1024));
     // show results
     // headings
     let results_headings: Vec<String> = results.iter().map(|r| r.heading.clone()).collect();
@@ -105,7 +129,7 @@ fn main() {
 }
 
 fn sign_bls_threshold_crypto(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -122,7 +146,7 @@ fn sign_bls_threshold_crypto(heading: String, msg_len: usize) -> Result {
 }
 
 fn sign_bls_blst(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -143,7 +167,7 @@ fn sign_bls_blst(heading: String, msg_len: usize) -> Result {
 }
 
 fn sign_ed25519(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -161,7 +185,7 @@ fn sign_ed25519(heading: String, msg_len: usize) -> Result {
 }
 
 fn verify_bls_threshold_crypto(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -179,7 +203,7 @@ fn verify_bls_threshold_crypto(heading: String, msg_len: usize) -> Result {
 }
 
 fn verify_bls_blst(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -193,7 +217,7 @@ fn verify_bls_blst(heading: String, msg_len: usize) -> Result {
         let dst = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
         let sig = bls_sk.sign(&msg, dst, &[]);
         let before = precise_time_ns();
-        let _verified = sig.verify(&msg, dst, &[], &pk);
+        let _verified = sig.verify(false, &msg, dst, &[], &pk, false);
         let d = precise_time_ns() - before;
         result.values[i] = d as f64 / 1000.0;
     }
@@ -201,7 +225,7 @@ fn verify_bls_blst(heading: String, msg_len: usize) -> Result {
 }
 
 fn verify_ed25519(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -222,7 +246,7 @@ fn verify_ed25519(heading: String, msg_len: usize) -> Result {
 // used by ed25519-dalek sign
 // https://github.com/dalek-cryptography/ed25519-dalek/blob/master/src/secret.rs#L406
 fn sha2_512(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
@@ -242,7 +266,7 @@ fn sha2_512(heading: String, msg_len: usize) -> Result {
 // used by threshold_crypto sign
 // https://github.com/poanetwork/threshold_crypto/blob/7709462f2df487ada3bb3243060504b5881f2628/src/util.rs#L3
 fn sha3_256(heading: String, msg_len: usize) -> Result {
-    let mut result = Result{
+    let mut result = Result {
         heading: heading,
         values: [0_f64; NUM_TESTS],
     };
